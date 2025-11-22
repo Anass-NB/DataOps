@@ -13,7 +13,7 @@ with DAG(
     upload_to_s3 = LocalFilesystemToS3Operator(
         task_id='upload_to_s3',
         filename="/usr/local/airflow/include/data/data.csv",
-        dest_key="raw/",
+        dest_key="raw/data.csv",
         dest_bucket="ecommerce-dataops",
         aws_conn_id='aws_default', 
         
