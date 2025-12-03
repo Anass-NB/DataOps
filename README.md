@@ -13,6 +13,7 @@ The architecture consists of the following components:
 4. **Data Processing**: ETL tools (dbt) to transform and load data.
 5. **Data Security**: Implementation of encryption, access controls, and monitoring.
 6. **Data Consumption**: BI tools (e.g., Tableau, Looker) for data analysis and reporting.  
+<<<<<<< HEAD
 7. **Monitoring & Logging**: Tools like ELK Stack or Prometheus for tracking data pipeline health and security events.
 
 
@@ -31,3 +32,6 @@ terraform plan
 terraform apply
 ```
 
+=======
+7. **Monitoring & Logging**: Tools like ELK Stack or Prometheus for tracking data pipeline health and security events.
+>>>>>>> 0f3603ca6751b01c13702fb35ea15200be6bb5e2

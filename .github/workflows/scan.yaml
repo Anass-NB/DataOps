@@ -1,0 +1,65 @@
+name: Security Scan - Trivy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  trivy-scan:
+    name: Run Trivy Security Scans
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      ##########################################################
+      # 1. FILESYSTEM SCAN (detect secrets, API keys, etc.)
+      ##########################################################
+      - name: Trivy FS Scan (Secrets & Vulnerabilities)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+          output: trivy-fs-report.txt
+
+      ##########################################################
+      # 2. DEPENDENCY SCAN (Python + Requirements.txt)
+      ##########################################################
+      - name: Trivy Python Dependency Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: repo
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+          output: trivy-deps-report.txt
+
+      ##########################################################
+      # 3. TERRAFORM IaC SECURITY SCAN
+      ##########################################################
+      - name: Trivy IaC Scan (Terraform)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          path: ./include/terraform
+          severity: HIGH,CRITICAL
+          output: trivy-iac-report.txt
+
+      ##########################################################
+      # 4. CONTAINER IMAGE SCAN (after building your Airflow image)
+      ##########################################################
+
+      ##########################################################
+      # 5. UPLOAD RESULTS AS GITHUB ARTIFACTS
+      ##########################################################
+      - name: Upload Trivy Scan Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-security-reports
+          path: |
+            trivy-fs-report.txt
+            trivy-deps-report.txt
+            trivy-iac-report.txt
