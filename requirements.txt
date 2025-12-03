@@ -2,7 +2,6 @@
 boto3
 requests
 snowflake-connector-python
-dbt-core
-dbt-snowflake
 apache-airflow-providers-amazon>=8.0.0
 apache-airflow-providers-snowflake==4.4.2
+great_expectations
