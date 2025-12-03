@@ -56,7 +56,7 @@ jobs:
       # 5. UPLOAD RESULTS AS GITHUB ARTIFACTS
       ##########################################################
       - name: Upload Trivy Scan Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-security-reports
           path: |
