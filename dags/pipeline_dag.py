@@ -17,7 +17,7 @@ dag =  DAG(
     dag_id='ecommerce_dag',
     # schedule_interval=None,
     # start_date = days_ago(1)
-    
+
     )
 
 
