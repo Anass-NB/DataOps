@@ -18,8 +18,32 @@ The architecture consists of the following components:
 
 
 
-### Iac using Terraform
-The infrastructure for this project is provisioned using Terraform. The main components include:
+---
+## Run the Project
+#### Clone the Repository
+```bash
+git clone https://github.com/Anass-NB/Ecom-DataOps-pipeline.git
+cd Ecom-DataOps-pipeline
+```
+#### Set up a Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+```
+#### Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+#### Run Astro
+```bash
+astro dev start
+```
+then you should setup the AWS connection in Airflow UI with your credentials.
+
+
+
+### Infrstrcture As a code using Terraform
+(Iac)The infrastructure for this project is provisioned using Terraform. The main components include:
 - **Storage Module**: This module creates  storage buckets
 - **Iam Module**: This module creates the IAM Users needed 
 

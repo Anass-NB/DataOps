@@ -1,10 +1,8 @@
 from airflow import DAG
-# from airflow.utils.dates import days_ago
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
-from airflow.operators.python_operator import PythonOperator
-from datetime import datetime
-from airflow.providers.snowflake.transfers.s3_to_snowflake import S3ToSnowflakeOperator
-
+from airflow.operators.python import PythonOperator
+from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger('dag_logger')
@@ -13,21 +11,45 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-dag =  DAG(
+# Default arguments for the DAG
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
     dag_id='ecommerce_dag',
-    # schedule_interval=None,
-    # start_date = days_ago(1)
+    default_args=default_args,
+    description='Daily ingestion of ecommerce transactions to S3 and Snowflake',
+    schedule='@daily',
+    start_date=datetime(2024, 1, 1),
+    catchup=False,
+    tags=['ecommerce', 'ingestion'],
+)
 
-    )
+
+def start_job(**context):
+    execution_date = context['ds']
+    logger.info(f"Starting the pipeline for date: {execution_date}")
 
 
-def start_job():
-    logging.info("Starting the pipeline.")
+def end_job(**context):
+    execution_date = context['ds']
+    logger.info(f"All processes completed for date: {execution_date}")
 
-def end_job():
-    logger.info("All process completed.")
-    
 
+# Helper function to generate S3 path based on execution date
+def get_s3_key(ds):
+    """Generate partitioned S3 key: raw/year=YYYY/month=MM/day=DD/transactions_YYYY-MM-DD.csv"""
+    date_obj = datetime.strptime(ds, '%Y-%m-%d')
+    return f"raw/year={date_obj.year}/month={date_obj.month:02d}/day={date_obj.day:02d}/transactions_{ds}.csv"
+
+
+def get_local_filename(ds):
+    """Generate local filename based on execution date"""
+    return f"/usr/local/airflow/include/data/transactions_{ds}.csv"
 
 
 start_task = PythonOperator(
@@ -35,32 +57,72 @@ start_task = PythonOperator(
     python_callable=start_job,
     dag=dag
 )
+
 end_task = PythonOperator(
     task_id='end_job',
     python_callable=end_job,
     dag=dag
 )
 
+# Upload daily CSV to S3 with partitioned structure
+# upload_to_s3_task = LocalFilesystemToS3Operator(
+#     task_id='upload_to_s3',
+#     filename="{{ macros.datetime.strptime(ds, '%Y-%m-%d') | string | regex_replace('.*', '/usr/local/airflow/include/data/transactions_' ~ ds ~ '.csv') }}",
+#     dest_key="{{ 'raw/year=' ~ execution_date.year ~ '/month=' ~ execution_date.strftime('%m') ~ '/day=' ~ execution_date.strftime('%d') ~ '/transactions_' ~ ds ~ '.csv' }}",
+#     dest_bucket="ecommerce-dataops",
+#     aws_conn_id='aws_default',
+#     replace=True,
+#     dag=dag
+# )
+
+# Simpler template approach for upload
 upload_to_s3_task = LocalFilesystemToS3Operator(
     task_id='upload_to_s3',
-    filename="/usr/local/airflow/include/data/data.csv",
-    dest_key="raw/data.csv",
+    filename="/usr/local/airflow/include/data/transactions_{{ ds }}.csv",
+    # use ds (YYYY-MM-DD) to build partition parts — execution_date isn't available in this template context
+    dest_key="raw/year={{ ds.split('-')[0] }}/month={{ ds.split('-')[1] }}/day={{ ds.split('-')[2] }}/transactions_{{ ds }}.csv",
     dest_bucket="ecommerce-dataops",
-    aws_conn_id='aws_default', 
+    aws_conn_id='aws_default',
+    replace=True,
     dag=dag
-    
 )
 
-load_to_snowflake_task = S3ToSnowflakeOperator(
-        task_id="load_csv_s3_to_snowflake",
-        snowflake_conn_id="snowflake_default",
-        s3_keys=["data.csv"],  # path inside the bucket
-        table="ORDERS_RAW",
-        schema="RAW",
-        stage="my_s3_stage",file_format="my_csv_format",  
-        dag=dag  
-    )
+# Load data incrementally into Snowflake using COPY INTO with file tracking
+# The COPY INTO command with file metadata tracking prevents reloading the same file
+load_to_snowflake_task = SnowflakeOperator(
+    task_id='load_to_snowflake',
+    snowflake_conn_id='snowflake_default',
+    sql="""
+        USE WAREHOUSE ecommerce_warehouse;
+        USE DATABASE ecommerce_db;
+        USE SCHEMA RAW;
 
-
+        COPY INTO ORDERS_RAW (
+            InvoiceNo,
+            StockCode,
+            Description,
+            Quantity,
+            InvoiceDate,
+            UnitPrice,
+            CustomerID,
+            Country
+        )
+        FROM (
+            SELECT
+                $1::STRING  AS InvoiceNo,
+                $2::STRING  AS StockCode,
+                $3::STRING  AS Description,
+                $4::INTEGER AS Quantity,
+                $5::STRING  AS InvoiceDate,
+                $6::FLOAT   AS UnitPrice,
+                $7::INTEGER AS CustomerID,
+                $8::STRING  AS Country
+            FROM @my_s3_stage/raw/year={{ ds.split('-')[0] }}/month={{ ds.split('-')[1] }}/day={{ ds.split('-')[2] }}/transactions_{{ ds }}.csv
+        )
+        FILE_FORMAT = (FORMAT_NAME = 'CSV_FORMAT')
+        ON_ERROR = 'CONTINUE';
+    """,
+    dag=dag
+)
 
 start_task >> upload_to_s3_task >> load_to_snowflake_task >> end_task
