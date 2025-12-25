@@ -20,9 +20,7 @@ jobs:
 
       - name: Deploy to Astronomer
         run: |
-          astro deploy \
-            --deployment-id "${{ secrets.ASTRO_DEPLOYMENT_ID }}" \
-            --workspace-token "${{ secrets.ASTRO_API_TOKEN }}"
+          astro deploy "${{ secrets.ASTRO_DEPLOYMENT_ID }}"
         env:
           ASTRONOMER_KEY_ID: "${{ secrets.ASTRO_API_TOKEN }}"
           ASTRONOMER_KEY_SECRET: "${{ secrets.ASTRO_API_TOKEN }}"
