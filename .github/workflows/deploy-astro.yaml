@@ -22,4 +22,4 @@ jobs:
         run: |
           astro deploy "${{ secrets.ASTRO_DEPLOYMENT_ID }}" --force
         env:
-          ASTRO_API_TOKEN: "${{ secrets.ASTRO_API_TOKEN }}"
+          ASTRO_API_TOKEN: "${{ secrets.ASTRO_DEPLOYMENT_TOKEN }}"
