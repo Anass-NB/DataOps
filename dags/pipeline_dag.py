@@ -1,9 +1,10 @@
 from airflow import DAG
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import PythonOperator, ShortCircuitOperator
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from datetime import datetime, timedelta
 import logging
+import os
 
 logger = logging.getLogger('dag_logger')
 logging.basicConfig(
@@ -52,6 +53,19 @@ def get_local_filename(ds):
     return f"/usr/local/airflow/include/data/transactions_{ds}.csv"
 
 
+def check_file_exists(**context):
+    """Check if the daily transaction file exists. Returns True to continue, False to skip downstream tasks."""
+    ds = context['ds']
+    file_path = f"/usr/local/airflow/include/data/transactions_{ds}.csv"
+    
+    if os.path.exists(file_path):
+        logger.info(f"File found: {file_path}")
+        return True
+    else:
+        logger.warning(f"File not found: {file_path}. Skipping upload and load tasks.")
+        return False
+
+
 start_task = PythonOperator(
     task_id='start_job',
     python_callable=start_job,
@@ -61,19 +75,17 @@ start_task = PythonOperator(
 end_task = PythonOperator(
     task_id='end_job',
     python_callable=end_job,
+    trigger_rule='none_failed_min_one_success',  # Run even if upstream tasks were skipped
     dag=dag
 )
 
-# Upload daily CSV to S3 with partitioned structure
-# upload_to_s3_task = LocalFilesystemToS3Operator(
-#     task_id='upload_to_s3',
-#     filename="{{ macros.datetime.strptime(ds, '%Y-%m-%d') | string | regex_replace('.*', '/usr/local/airflow/include/data/transactions_' ~ ds ~ '.csv') }}",
-#     dest_key="{{ 'raw/year=' ~ execution_date.year ~ '/month=' ~ execution_date.strftime('%m') ~ '/day=' ~ execution_date.strftime('%d') ~ '/transactions_' ~ ds ~ '.csv' }}",
-#     dest_bucket="ecommerce-dataops",
-#     aws_conn_id='aws_default',
-#     replace=True,
-#     dag=dag
-# )
+check_file_task = ShortCircuitOperator(
+    task_id='check_file_exists',
+    python_callable=check_file_exists,
+    dag=dag
+)
+
+
 
 # Simpler template approach for upload
 upload_to_s3_task = LocalFilesystemToS3Operator(
@@ -125,4 +137,4 @@ load_to_snowflake_task = SnowflakeOperator(
     dag=dag
 )
 
-start_task >> upload_to_s3_task >> load_to_snowflake_task >> end_task
+start_task >> check_file_task >> upload_to_s3_task >> load_to_snowflake_task >> end_task
