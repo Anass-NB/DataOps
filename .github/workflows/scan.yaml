@@ -1,4 +1,4 @@
-name: Security Scan - Trivy
+name: CI Pipeline
 
 on:
   push:
@@ -7,6 +7,44 @@ on:
     branches: [master]
 
 jobs:
+  # lint-and-test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
+
+  #     - name: Install dependencies
+  #       run: pip install -r requirements.txt
+
+  #     # Lint Python code
+  #     - name: Run Ruff/Flake8
+  #       run: |
+  #         pip install ruff
+  #         ruff check dags/ include/
+
+  #     # Validate DAGs
+  #     - name: Test DAG Integrity
+  #       run: python -m pytest .astro/test_dag_integrity_default.py
+
+  #     # dbt compile & test
+  #     - name: dbt Compile
+  #       working-directory: include/dbt
+  #       run: |
+  #         pip install dbt-snowflake
+  #         dbt compile --profiles-dir .
+
+  #     # Terraform validate
+  #     - name: Terraform Validate
+  #       working-directory: include/terraform
+  #       run: |
+  #         terraform init -backend=false
+  #         terraform validate
+  #         terraform fmt -check
+
   trivy-scan:
     name: Run Trivy Security Scans
     runs-on: ubuntu-latest

@@ -35,6 +35,7 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
 ```
 #### Run Astro
+Make sure that Astro is installed on your machine. If not, you can install it by following the instructions [here](https://docs.astronomer.io/astro/cli-installation). and then run the following command in the project root directory:
 ```bash
 astro dev start
 ```
