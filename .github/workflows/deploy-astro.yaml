@@ -20,7 +20,6 @@ jobs:
 
       - name: Deploy to Astronomer
         run: |
-          astro deploy "${{ secrets.ASTRO_DEPLOYMENT_ID }}"
+          astro deploy "${{ secrets.ASTRO_DEPLOYMENT_ID }}" --force
         env:
-          ASTRONOMER_KEY_ID: "${{ secrets.ASTRO_API_TOKEN }}"
-          ASTRONOMER_KEY_SECRET: "${{ secrets.ASTRO_API_TOKEN }}"
+          ASTRO_API_TOKEN: "${{ secrets.ASTRO_API_TOKEN }}"
