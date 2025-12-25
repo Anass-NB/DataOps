@@ -20,7 +20,7 @@ jobs:
 
       - name: Authenticate to Astronomer
         run: |
-          astro auth login --token "${{ secrets.ASTRO_API_TOKEN }}"
+          astro login --token "${{ secrets.ASTRO_API_TOKEN }}"
 
       - name: Deploy to Astronomer
         run: |
