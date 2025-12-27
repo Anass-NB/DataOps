@@ -3,7 +3,7 @@ name: CD - Deploy Airflow to Astronomer
 on:
   push:
     branches:
-      - master # Only triggers on merge/push to master
+      - master  # Only triggers on merge/push to master
 
 jobs:
   deploy:
