@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.operators.python import PythonOperator, ShortCircuitOperator, BranchPythonOperator
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from datetime import datetime, timedelta
 import logging
@@ -90,7 +90,7 @@ check_file_task = BranchPythonOperator(
 )
 
 # Dummy to represent the branch when upload is skipped
-skip_upload = DummyOperator(task_id='skip_upload', dag=dag)
+skip_upload = EmptyOperator(task_id='skip_upload', dag=dag)
 
 # Simpler template approach for upload
 upload_to_s3_task = LocalFilesystemToS3Operator(
@@ -147,13 +147,13 @@ load_to_snowflake_task = SnowflakeOperator(
 
 dbt_run = BashOperator(
     task_id='dbt_run',
-    bash_command=f'source /usr/local/airflow/snowflake.env && cd {DBT_PROJECT_PATH} && dbt run --profiles-dir {DBT_PROJECT_PATH}',
+    bash_command=f'cd {DBT_PROJECT_PATH} && dbt run --profiles-dir {DBT_PROJECT_PATH}',
     dag=dag
 )
 
 dbt_test = BashOperator(
     task_id='dbt_test',
-    bash_command=f'source /usr/local/airflow/snowflake.env && cd {DBT_PROJECT_PATH} && dbt test --profiles-dir {DBT_PROJECT_PATH}',
+    bash_command=f'cd {DBT_PROJECT_PATH} && dbt test --profiles-dir {DBT_PROJECT_PATH}',
     dag=dag
 )
 
