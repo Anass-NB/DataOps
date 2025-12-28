@@ -2,6 +2,8 @@ from airflow import DAG
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.operators.python import PythonOperator, ShortCircuitOperator
 from airflow.operators.bash import BashOperator
+from airflow.operators.branch import BranchPythonOperator
+from airflow.operators.dummy import DummyOperator
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from datetime import datetime, timedelta
 import logging
@@ -58,16 +60,15 @@ def get_local_filename(ds):
 
 
 def check_file_exists(**context):
-    """Check if the daily transaction file exists. Returns True to continue, False to skip downstream tasks."""
+    """Branch: if daily file exists -> 'upload_to_s3', else -> 'skip_upload'."""
     ds = context['ds']
     file_path = f"/usr/local/airflow/include/data/transactions_{ds}.csv"
-    
     if os.path.exists(file_path):
         logger.info(f"File found: {file_path}")
-        return True
+        return "upload_to_s3"
     else:
-        logger.warning(f"File not found: {file_path}. Skipping upload and load tasks.")
-        return False
+        logger.warning(f"File not found: {file_path}. Skipping upload only.")
+        return "skip_upload"
 
 
 start_task = PythonOperator(
@@ -83,13 +84,14 @@ end_task = PythonOperator(
     dag=dag
 )
 
-check_file_task = ShortCircuitOperator(
+check_file_task = BranchPythonOperator(
     task_id='check_file_exists',
     python_callable=check_file_exists,
     dag=dag
 )
 
-
+# Dummy to represent the branch when upload is skipped
+skip_upload = DummyOperator(task_id='skip_upload', dag=dag)
 
 # Simpler template approach for upload
 upload_to_s3_task = LocalFilesystemToS3Operator(
@@ -138,6 +140,7 @@ load_to_snowflake_task = SnowflakeOperator(
         FILE_FORMAT = (FORMAT_NAME = 'CSV_FORMAT')
         ON_ERROR = 'CONTINUE';
     """,
+    trigger_rule='one_success',
     dag=dag
 )
 
@@ -155,4 +158,7 @@ dbt_test = BashOperator(
     dag=dag
 )
 
-start_task >> check_file_task >> upload_to_s3_task >> load_to_snowflake_task >> dbt_run >> dbt_test >> end_task
+start_task >> check_file_task
+check_file_task >> upload_to_s3_task >> load_to_snowflake_task
+check_file_task >> skip_upload >> load_to_snowflake_task
+load_to_snowflake_task >> dbt_run >> dbt_test >> end_task
