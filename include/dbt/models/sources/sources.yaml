@@ -2,8 +2,7 @@ version: 2
 
 sources:
 - name: retail
-  database: ECOM_DB
+  database: ECOMMERCE_DB
   schema: RAW
   tables:
   - name: orders_raw
-  

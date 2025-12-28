@@ -1,10 +1,14 @@
 from airflow import DAG
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.operators.python import PythonOperator, ShortCircuitOperator
+from airflow.operators.bash import BashOperator
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from datetime import datetime, timedelta
 import logging
 import os
+
+# Path to dbt project
+DBT_PROJECT_PATH = "/usr/local/airflow/include/dbt"
 
 logger = logging.getLogger('dag_logger')
 logging.basicConfig(
@@ -137,4 +141,18 @@ load_to_snowflake_task = SnowflakeOperator(
     dag=dag
 )
 
-start_task >> check_file_task >> upload_to_s3_task >> load_to_snowflake_task >> end_task
+# DBT TASKS 
+
+dbt_run = BashOperator(
+    task_id='dbt_run',
+    bash_command=f'source /usr/local/airflow/snowflake.env && cd {DBT_PROJECT_PATH} && dbt run --profiles-dir {DBT_PROJECT_PATH}',
+    dag=dag
+)
+
+dbt_test = BashOperator(
+    task_id='dbt_test',
+    bash_command=f'source /usr/local/airflow/snowflake.env && cd {DBT_PROJECT_PATH} && dbt test --profiles-dir {DBT_PROJECT_PATH}',
+    dag=dag
+)
+
+start_task >> check_file_task >> upload_to_s3_task >> load_to_snowflake_task >> dbt_run >> dbt_test >> end_task
