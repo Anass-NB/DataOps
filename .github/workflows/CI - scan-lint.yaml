@@ -8,24 +8,24 @@
       branches: [master]
 
   jobs:
-    # lint-and-test:
-    #   runs-on: ubuntu-latest
-    #   steps:
-    #     - uses: actions/checkout@v3
+    lint-and-test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
 
-    #     - name: Set up Python
-    #       uses: actions/setup-python@v4
-    #       with:
-    #         python-version: "3.10"
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: "3.10"
 
-    #     - name: Install dependencies
-    #       run: pip install -r requirements.txt
+        - name: Install dependencies
+          run: pip install -r requirements.txt
 
-    #     # Lint Python code
-    #     - name: Run Ruff/Flake8
-    #       run: |
-    #         pip install ruff
-    #         ruff check dags/ include/
+        # Lint Python code
+        - name: Run Ruff/Flake8
+          run: |
+            pip install ruff
+            ruff check dags/ include/
 
     #     # Validate DAGs
     #     - name: Test DAG Integrity
