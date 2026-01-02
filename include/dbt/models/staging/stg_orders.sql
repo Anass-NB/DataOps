@@ -8,7 +8,7 @@ with raw as (
     UnitPrice,
     CustomerID,
     Country
-  from {{ source('raw_data', 'ecommerce_table') }}
+  from {{ source('raw_data', 'orders_raw') }}
 ),
 
 typed as (

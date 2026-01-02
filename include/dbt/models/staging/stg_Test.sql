@@ -3,5 +3,5 @@ SELECT DISTINCT
 	StockCode AS stock_code,
     Description AS description,
     UnitPrice AS price
-FROM {{ source('raw_data', 'ecommerce_table') }}
+FROM {{ source('raw_data', 'orders_raw') }}
 WHERE UnitPrice < 0

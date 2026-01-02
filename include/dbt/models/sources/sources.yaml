@@ -1,8 +1,0 @@
-version: 2
-
-sources:
-- name: retail
-  database: ECOMMERCE_DB
-  schema: RAW
-  tables:
-  - name: orders_raw

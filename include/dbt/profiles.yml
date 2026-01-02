@@ -3,11 +3,10 @@ ecomdataops:
   outputs:
     dev:
       type: snowflake
-      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
-      user: "{{ env_var('SNOWFLAKE_USER') }}"
-      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
-      role: "{{ env_var('SNOWFLAKE_ROLE', '') }}"
-      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
-      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
-      schema: "{{ env_var('SNOWFLAKE_SCHEMA') }}"
+      account: ax09080.eu-west-3.aws
+      user: AnassEnasmien
+      password: riLBi6XPNuShq8c
+      warehouse: ECOMMERCE_WAREHOUSE
+      database: ECOMMERCE_DB
+      schema: RAW
       threads: 1
