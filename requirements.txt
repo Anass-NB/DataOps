@@ -4,5 +4,7 @@ requests
 snowflake-connector-python
 apache-airflow-providers-amazon>=8.0.0
 apache-airflow-providers-snowflake==4.4.2
-great_expectations
+# great_expectations
 astronomer-cosmos[dbt-snowflake]
+dbt-core
+dbt-snowflake
