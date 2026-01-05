@@ -19,7 +19,7 @@ typed as (
     try_cast(Quantity as integer) as quantity,
     try_cast(UnitPrice as float) as unit_price,
     try_cast(CustomerID as integer) as customer_id,
-    to_timestamp(InvoiceDate) as invoice_ts,   
+    to_timestamp(InvoiceDate, 'MM/DD/YYYY HH24:MI') as invoice_ts,   
     Country
   from raw
 ),
