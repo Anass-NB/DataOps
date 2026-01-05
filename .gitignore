@@ -19,4 +19,3 @@ plugins/__pycache__/
 plugins/example_dags/__pycache__/
 venv
 snowflake.env
-include/dbt/profiles.yml
