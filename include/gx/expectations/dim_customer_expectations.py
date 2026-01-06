@@ -1,42 +1,40 @@
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
+import great_expectations as gx
+from great_expectations.expectations import (
+    ExpectColumnToExist,
+    ExpectColumnValuesToBeOfType,
+    ExpectColumnValuesToBeUnique,
+    ExpectColumnValuesToNotBeNull,
+)
 
-suite = ExpectationSuite(expectation_suite_name="dim_customer_suite")
+# Create expectation suite
+suite_name = "dim_customer_suite"
 
-# Schema: Required columns
-required_columns = ["customer_id", "country"]
+# Define expectations as a list
+expectations = []
+
+# Schema: Required columns (matching dbt model: dim_customer.sql)
+required_columns = ["customer_key", "country"]
 for col in required_columns:
-    suite.add_expectation(
-        ExpectationConfiguration(
-            expectation_type="expect_column_to_exist",
-            kwargs={"column": col}
-        )
+    expectations.append(
+        ExpectColumnToExist(column=col)
     )
 
 # Schema: Column types
 column_types = {
-    "customer_id": "str",
+    "customer_key": "str",
     "country": "str",
 }
 for col, dtype in column_types.items():
-    suite.add_expectation(
-        ExpectationConfiguration(
-            expectation_type="expect_column_values_to_be_of_type",
-            kwargs={"column": col, "type_": dtype}
-        )
+    expectations.append(
+        ExpectColumnValuesToBeOfType(column=col, type_=dtype)
     )
 
 # All customers are unique
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_unique",
-        kwargs={"column": "customer_id"}
-    )
+expectations.append(
+    ExpectColumnValuesToBeUnique(column="customer_key")
 )
 
 # All customers have a key (no nulls)
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_not_be_null",
-        kwargs={"column": "customer_id"}
-    )
+expectations.append(
+    ExpectColumnValuesToNotBeNull(column="customer_key")
 )

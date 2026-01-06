@@ -1,0 +1,3 @@
+InvoiceNo,StockCode,Description,Quantity,InvoiceDate,UnitPrice,CustomerID,Country
+5363651,85123A,CameraAnassNabil,9,12/1/2010 8:26,99,17850,United Kingdom
+

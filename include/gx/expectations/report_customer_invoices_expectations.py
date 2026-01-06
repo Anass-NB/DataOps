@@ -1,19 +1,21 @@
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
+import great_expectations as gx
+from great_expectations.expectations import (
+    ExpectColumnValuesToNotBeNull,
+    ExpectColumnValuesToBeBetween,
+)
 
-suite = ExpectationSuite(expectation_suite_name="report_customer_invoices_suite")
+# Create expectation suite
+suite_name = "report_customer_invoices_suite"
+
+# Define expectations as a list
+expectations = []
 
 # All customers have a country (no nulls)
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_not_be_null",
-        kwargs={"column": "country"}
-    )
+expectations.append(
+    ExpectColumnValuesToNotBeNull(column="country")
 )
 
 # Total invoices is greater than 0
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_between",
-        kwargs={"column": "total_invoices", "min_value": 1}
-    )
+expectations.append(
+    ExpectColumnValuesToBeBetween(column="total_invoices", min_value=1)
 )

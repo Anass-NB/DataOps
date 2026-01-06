@@ -1,11 +1,15 @@
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
+import great_expectations as gx
+from great_expectations.expectations import (
+    ExpectColumnValuesToBeBetween,
+)
 
-suite = ExpectationSuite(expectation_suite_name="report_year_invoices_suite")
+# Create expectation suite
+suite_name = "report_year_invoices_suite"
+
+# Define expectations as a list
+expectations = []
 
 # Number of invoices is non-negative
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_between",
-        kwargs={"column": "num_invoices", "min_value": 0}
-    )
+expectations.append(
+    ExpectColumnValuesToBeBetween(column="num_invoices", min_value=0)
 )

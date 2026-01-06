@@ -1,50 +1,40 @@
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
+import great_expectations as gx
+from great_expectations.expectations import (
+    ExpectColumnToExist,
+    ExpectColumnValuesToBeUnique,
+    ExpectColumnValuesToNotBeNull,
+    ExpectColumnValuesToBeBetween,
+)
 
-suite = ExpectationSuite(expectation_suite_name="dim_datetime_suite")
+# Create expectation suite
+suite_name = "dim_datetime_suite"
 
-# Schema: Required columns
-required_columns = ["datetime_id", "datetime"]
+# Define expectations as a list
+expectations = []
+
+# Schema: Required columns (matching dbt model: dim_date.sql)
+required_columns = ["date_key", "full_date", "year", "month", "day"]
 for col in required_columns:
-    suite.add_expectation(
-        ExpectationConfiguration(
-            expectation_type="expect_column_to_exist",
-            kwargs={"column": col}
-        )
+    expectations.append(
+        ExpectColumnToExist(column=col)
     )
 
-# Schema: Column types
-column_types = {
-    "datetime_id": "str",
-    "datetime": "datetime64",
-}
-for col, dtype in column_types.items():
-    suite.add_expectation(
-        ExpectationConfiguration(
-            expectation_type="expect_column_values_to_be_of_type",
-            kwargs={"column": col, "type_": dtype}
-        )
-    )
-
-# All weekdays are in range 0-6
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_between",
-        kwargs={"column": "weekday", "min_value": 0, "max_value": 6}
-    )
+# All date keys are unique
+expectations.append(
+    ExpectColumnValuesToBeUnique(column="date_key")
 )
 
-# All datetimes are unique
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_unique",
-        kwargs={"column": "datetime_id"}
-    )
+# All date keys have a value (no nulls)
+expectations.append(
+    ExpectColumnValuesToNotBeNull(column="date_key")
 )
 
-# All datetimes have a key (no nulls)
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_not_be_null",
-        kwargs={"column": "datetime_id"}
-    )
+# Month values should be between 1 and 12
+expectations.append(
+    ExpectColumnValuesToBeBetween(column="month", min_value=1, max_value=12)
+)
+
+# Day values should be between 1 and 31
+expectations.append(
+    ExpectColumnValuesToBeBetween(column="day", min_value=1, max_value=31)
 )

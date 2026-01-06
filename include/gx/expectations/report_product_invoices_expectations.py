@@ -1,19 +1,21 @@
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
+import great_expectations as gx
+from great_expectations.expectations import (
+    ExpectColumnValuesToNotBeNull,
+    ExpectColumnValuesToBeBetween,
+)
 
-suite = ExpectationSuite(expectation_suite_name="report_product_invoices_suite")
+# Create expectation suite
+suite_name = "report_product_invoices_suite"
+
+# Define expectations as a list
+expectations = []
 
 # All products have a stock code (no nulls)
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_not_be_null",
-        kwargs={"column": "stock_code"}
-    )
+expectations.append(
+    ExpectColumnValuesToNotBeNull(column="stock_code")
 )
 
 # Total quantity sold is greater than 0
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_between",
-        kwargs={"column": "total_quantity_sold", "min_value": 1}
-    )
+expectations.append(
+    ExpectColumnValuesToBeBetween(column="total_quantity_sold", min_value=1)
 )

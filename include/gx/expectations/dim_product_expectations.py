@@ -1,51 +1,47 @@
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
+import great_expectations as gx
+from great_expectations.expectations import (
+    ExpectColumnToExist,
+    ExpectColumnValuesToBeOfType,
+    ExpectColumnValuesToBeUnique,
+    ExpectColumnValuesToNotBeNull,
+    ExpectColumnValuesToBeInSet,
+)
 
-suite = ExpectationSuite(expectation_suite_name="dim_product_suite")
+# Create expectation suite
+suite_name = "dim_product_suite"
 
-# Schema: Required columns
-required_columns = ["product_id", "description", "price"]
+# Define expectations as a list
+expectations = []
+
+# Schema: Required columns (matching dbt model: dim_product.sql)
+required_columns = ["product_key", "product_name", "product_category"]
 for col in required_columns:
-    suite.add_expectation(
-        ExpectationConfiguration(
-            expectation_type="expect_column_to_exist",
-            kwargs={"column": col}
-        )
+    expectations.append(
+        ExpectColumnToExist(column=col)
     )
 
 # Schema: Column types
 column_types = {
-    "product_id": "str",
-    "description": "str",
-    "price": "float64",
+    "product_key": "str",
+    "product_name": "str",
+    "product_category": "str",
 }
 for col, dtype in column_types.items():
-    suite.add_expectation(
-        ExpectationConfiguration(
-            expectation_type="expect_column_values_to_be_of_type",
-            kwargs={"column": col, "type_": dtype}
-        )
+    expectations.append(
+        ExpectColumnValuesToBeOfType(column=col, type_=dtype)
     )
 
 # All products are unique
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_unique",
-        kwargs={"column": "product_id"}
-    )
+expectations.append(
+    ExpectColumnValuesToBeUnique(column="product_key")
 )
 
 # All products have a key (no nulls)
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_not_be_null",
-        kwargs={"column": "product_id"}
-    )
+expectations.append(
+    ExpectColumnValuesToNotBeNull(column="product_key")
 )
 
-# All prices are non-negative
-suite.add_expectation(
-    ExpectationConfiguration(
-        expectation_type="expect_column_values_to_be_between",
-        kwargs={"column": "price", "min_value": 0}
-    )
+# Product category should be one of the expected values
+expectations.append(
+    ExpectColumnValuesToBeInSet(column="product_category", value_set=["Decor", "Homeware", "Other"])
 )
